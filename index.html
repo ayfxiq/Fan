@@ -1,0 +1,2148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#080b10" />
+  <meta name="description" content="ARSS - نظام المحاكاة الهوائية المتقدم" />
+  <title>ARSS — نظام المحاكاة الهوائية المتقدم</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07090d;
+      --bg-soft: #0b0f15;
+      --panel: rgba(16, 22, 30, 0.82);
+      --panel-strong: rgba(18, 25, 34, 0.96);
+      --border: rgba(113, 145, 176, 0.18);
+      --border-strong: rgba(67, 166, 255, 0.34);
+      --text: #edf4fb;
+      --muted: #8d9baa;
+      --accent: #3fa8ff;
+      --accent-soft: #76c7ff;
+      --danger: #ff4d5a;
+      --success: #59d49b;
+      --warning: #ffb24a;
+      --shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
+      --rotation-duration: 1s;
+      --blade-color: #1e2630;
+      --blade-highlight: #566575;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: var(--text);
+      font-family:
+        "Tajawal",
+        "Segoe UI",
+        Tahoma,
+        Arial,
+        sans-serif;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(63, 168, 255, 0.08), transparent 34%),
+        radial-gradient(circle at 80% 90%, rgba(63, 168, 255, 0.06), transparent 30%),
+        linear-gradient(145deg, #06080b, #090d13 45%, #070a0f);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 100;
+      background:
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+      background-size: 52px 52px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.75), transparent 70%);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app-shell {
+      position: relative;
+      min-height: 100vh;
+    }
+
+    .top-bar {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      right: 18px;
+      z-index: 80;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(8, 11, 16, 0.74);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 12px 35px rgba(0,0,0,.23);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      border: 1px solid rgba(118,199,255,.28);
+      background:
+        radial-gradient(circle, rgba(118,199,255,.22), rgba(63,168,255,.06));
+      color: var(--accent-soft);
+      box-shadow: 0 0 22px rgba(63,168,255,.12);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: .8px;
+    }
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+    .brand-name {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .4px;
+      white-space: nowrap;
+    }
+
+    .brand-sub {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 11px;
+      color: #cbd6df;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,.02);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 12px rgba(89,212,155,.75);
+    }
+
+    .view {
+      position: absolute;
+      inset: 0;
+      min-height: 100vh;
+      padding: 120px 20px 40px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(18px);
+      transition:
+        opacity .45s ease,
+        transform .45s ease,
+        visibility .45s;
+    }
+
+    .view.active {
+      position: relative;
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .container {
+      width: min(1160px, 100%);
+      margin: 0 auto;
+    }
+
+    .hero {
+      min-height: calc(100vh - 160px);
+      display: grid;
+      place-items: center;
+    }
+
+    .hero-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .hero-copy {
+      max-width: 700px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 18px;
+      color: #a9bbca;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.7px;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 24px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent));
+    }
+
+    .hero h1 {
+      max-width: 780px;
+      margin-bottom: 18px;
+      font-size: clamp(38px, 7vw, 74px);
+      line-height: 1.04;
+      font-weight: 900;
+      letter-spacing: -1.8px;
+    }
+
+    .hero h1 span {
+      color: var(--accent-soft);
+      text-shadow: 0 0 30px rgba(118,199,255,.14);
+    }
+
+    .hero-description {
+      max-width: 760px;
+      color: #9ba8b4;
+      line-height: 2.0;
+      font-size: 15px;
+      text-align: justify;
+    }
+
+    .developer-line {
+      margin-top: 18px;
+      color: #cad5df;
+      font-size: 12px;
+    }
+
+    .developer-line strong {
+      color: var(--accent-soft);
+      font-weight: 800;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 28px;
+    }
+
+    .btn {
+      border: 1px solid transparent;
+      border-radius: 13px;
+      padding: 12px 18px;
+      transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        border-color .2s ease,
+        background .2s ease;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      color: #06101a;
+      background: linear-gradient(135deg, #92d2ff, #3fa8ff);
+      box-shadow: 0 10px 28px rgba(63,168,255,.2);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 14px 36px rgba(63,168,255,.28);
+    }
+
+    .btn-secondary {
+      color: #c5d0da;
+      border-color: var(--border);
+      background: rgba(255,255,255,.025);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--border-strong);
+      background: rgba(63,168,255,.06);
+    }
+
+    .btn-danger {
+      color: #fff;
+      background: linear-gradient(135deg, #ff6570, #d8283a);
+      box-shadow: 0 12px 30px rgba(255,77,90,.18);
+    }
+
+    .btn-danger:hover {
+      box-shadow: 0 16px 38px rgba(255,77,90,.24);
+    }
+
+    .btn:disabled {
+      opacity: .42;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .hero-visual {
+      min-height: 460px;
+      position: relative;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background:
+        radial-gradient(circle at center, rgba(63,168,255,.09), transparent 52%),
+        linear-gradient(150deg, rgba(18,24,32,.9), rgba(9,12,17,.88));
+      box-shadow: var(--shadow);
+    }
+
+    .hero-visual::before,
+    .chamber::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(126,157,185,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(126,157,185,.05) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: radial-gradient(circle at center, black 32%, transparent 85%);
+    }
+
+    .scan-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      top: -10%;
+      background: linear-gradient(90deg, transparent, rgba(118,199,255,.34), transparent);
+      animation: scan 5s linear infinite;
+      opacity: .4;
+    }
+
+    @keyframes scan {
+      to {
+        top: 110%;
+      }
+    }
+
+    .status-card {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      left: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #8795a2;
+      font-size: 10px;
+      letter-spacing: .7px;
+      text-transform: uppercase;
+    }
+
+    .status-card strong {
+      color: #cdd8e2;
+    }
+
+    .schematic {
+      position: relative;
+      width: min(330px, 78%);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+    }
+
+    .schematic::before,
+    .schematic::after {
+      content: "";
+      position: absolute;
+      border: 1px solid rgba(118,199,255,.1);
+      border-radius: 50%;
+    }
+
+    .schematic::before {
+      inset: 7%;
+    }
+
+    .schematic::after {
+      inset: 20%;
+    }
+
+    .schematic-core {
+      width: 78px;
+      height: 78px;
+      position: relative;
+      z-index: 3;
+      border-radius: 23px;
+      border: 1px solid rgba(118,199,255,.42);
+      background:
+        radial-gradient(circle at 35% 30%, rgba(150,210,255,.33), transparent 28%),
+        linear-gradient(145deg, #1d2a38, #0a1018);
+      box-shadow:
+        inset 0 0 28px rgba(118,199,255,.08),
+        0 0 30px rgba(63,168,255,.12);
+      transform: rotate(45deg);
+    }
+
+    .schematic-core::after {
+      content: "ARSS";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      transform: rotate(-45deg);
+      color: #bddcff;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .schematic-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border: 1px dashed rgba(118,199,255,.2);
+      border-radius: 50%;
+      animation: spin-slow 16s linear infinite;
+    }
+
+    @keyframes spin-slow {
+      to { transform: rotate(360deg); }
+    }
+
+    .schematic-line {
+      position: absolute;
+      width: 61%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(118,199,255,.24), transparent);
+      transform-origin: center;
+    }
+
+    .schematic-line.l1 { transform: rotate(0deg); }
+    .schematic-line.l2 { transform: rotate(45deg); }
+    .schematic-line.l3 { transform: rotate(90deg); }
+    .schematic-line.l4 { transform: rotate(135deg); }
+
+    .section-header {
+      margin-bottom: 24px;
+    }
+
+    .section-kicker {
+      color: var(--accent-soft);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 2px;
+    }
+
+    .section-title {
+      margin-top: 7px;
+      font-size: clamp(27px, 4.5vw, 43px);
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .section-subtitle {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    .spec-grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 18px;
+    }
+
+    .panel {
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: linear-gradient(155deg, rgba(19,25,33,.92), rgba(11,15,21,.9));
+      box-shadow: var(--shadow);
+    }
+
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 15px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,.055);
+    }
+
+    .panel-title h3 {
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .panel-index {
+      color: var(--accent-soft);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .energy-note {
+      color: #a8b4bf;
+      line-height: 2;
+      font-size: 13px;
+      text-align: justify;
+    }
+
+    .range-box {
+      margin-top: 16px;
+      padding: 15px;
+      border-radius: 15px;
+      background: rgba(63,168,255,.04);
+      border: 1px solid rgba(63,168,255,.09);
+    }
+
+    .range-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: #bcc9d4;
+      font-size: 11px;
+    }
+
+    .range-line strong {
+      color: #d8e7f3;
+      font-size: 12px;
+    }
+
+    .spec-list {
+      display: grid;
+      gap: 13px;
+      list-style: none;
+      color: #aab6c0;
+      font-size: 12px;
+      line-height: 1.9;
+    }
+
+    .spec-list li {
+      position: relative;
+      padding-right: 17px;
+    }
+
+    .spec-list li::before {
+      content: "";
+      position: absolute;
+      top: .8em;
+      right: 0;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(63,168,255,.5);
+    }
+
+    .consent-panel {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .consent-label {
+      display: inline-flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: #aebac4;
+      font-size: 12px;
+      line-height: 1.7;
+      cursor: pointer;
+      max-width: 760px;
+    }
+
+    .consent-label input {
+      margin-top: 3px;
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+      flex: 0 0 auto;
+      cursor: pointer;
+    }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .control-card {
+      position: relative;
+      min-height: 180px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 85% 10%, rgba(63,168,255,.08), transparent 32%),
+        rgba(12,17,23,.85);
+    }
+
+    .control-card.wide {
+      grid-column: span 2;
+      min-height: 210px;
+    }
+
+    .control-heading {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .control-heading h3 {
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .control-heading p {
+      margin-top: 5px;
+      color: #768594;
+      font-size: 10px;
+      line-height: 1.6;
+    }
+
+    .digital-readout {
+      min-width: 88px;
+      padding: 9px 10px;
+      border-radius: 11px;
+      border: 1px solid rgba(118,199,255,.16);
+      background: rgba(118,199,255,.035);
+      text-align: center;
+      color: var(--accent-soft);
+      font-family: "Consolas", "Courier New", monospace;
+      font-weight: 800;
+      font-size: 18px;
+      box-shadow: inset 0 0 18px rgba(63,168,255,.04);
+    }
+
+    .range-wrap {
+      margin-top: 24px;
+    }
+
+    .range-wrap input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .range-scale {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      color: #5d6a78;
+      font-size: 10px;
+    }
+
+    .select-wrap {
+      margin-top: 24px;
+      position: relative;
+    }
+
+    .select-wrap select {
+      width: 100%;
+      appearance: none;
+      color: #dce5ec;
+      border: 1px solid rgba(118,199,255,.14);
+      border-radius: 12px;
+      padding: 12px 13px;
+      outline: none;
+      background: rgba(255,255,255,.025);
+    }
+
+    .select-wrap::after {
+      content: "⌄";
+      position: absolute;
+      top: 50%;
+      left: 13px;
+      transform: translateY(-55%);
+      color: var(--accent-soft);
+      pointer-events: none;
+    }
+
+    .toggle-list {
+      display: grid;
+      gap: 13px;
+      margin-top: 18px;
+    }
+
+    .toggle-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 11px 12px;
+      border: 1px solid rgba(255,255,255,.055);
+      border-radius: 12px;
+      background: rgba(255,255,255,.018);
+    }
+
+    .toggle-copy strong {
+      display: block;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .toggle-copy span {
+      display: block;
+      margin-top: 4px;
+      color: #6d7a88;
+      font-size: 9px;
+    }
+
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex: 0 0 auto;
+    }
+
+    .toggle input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      border: 1px solid #36404b;
+      background: #11161d;
+      transition: .25s ease;
+    }
+
+    .toggle-track::after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 3px;
+      right: 3px;
+      border-radius: 50%;
+      background: #6b7785;
+      transition: .25s ease;
+      box-shadow: 0 2px 7px rgba(0,0,0,.4);
+    }
+
+    .toggle input:checked + .toggle-track {
+      border-color: rgba(63,168,255,.55);
+      background: rgba(63,168,255,.18);
+      box-shadow: 0 0 18px rgba(63,168,255,.12);
+    }
+
+    .toggle input:checked + .toggle-track::after {
+      right: 24px;
+      background: #a9dcff;
+      box-shadow: 0 0 12px rgba(63,168,255,.65);
+    }
+
+    .preview-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 17px;
+    }
+
+    .preview-chip {
+      padding: 7px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.055);
+      background: rgba(255,255,255,.018);
+      color: #8b99a6;
+      font-size: 9px;
+    }
+
+    .preview-chip strong {
+      color: #c8d6e1;
+    }
+
+    .control-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-top: 17px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,.055);
+    }
+
+    .validation-note {
+      color: #697683;
+      font-size: 10px;
+      line-height: 1.7;
+    }
+
+    .validation-note strong {
+      color: #98a9b8;
+    }
+
+    .chamber {
+      position: relative;
+      min-height: calc(100vh - 155px);
+      border: 1px solid rgba(118,145,170,.18);
+      border-radius: 28px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(63,168,255,.03), transparent 37%),
+        #0a0e13;
+      box-shadow: var(--shadow);
+    }
+
+    .chamber-grid {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(124,148,169,.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,148,169,.055) 1px, transparent 1px);
+      background-size: 40px 40px;
+      transform: perspective(700px) rotateX(58deg) scale(1.6);
+      transform-origin: center;
+      opacity: .58;
+    }
+
+    .chamber-header {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      left: 18px;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 15px;
+    }
+
+    .chamber-title h2 {
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .chamber-title span {
+      display: block;
+      margin-top: 4px;
+      color: #6f7c89;
+      font-size: 9px;
+      letter-spacing: 1px;
+    }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid rgba(89,212,155,.18);
+      border-radius: 999px;
+      background: rgba(89,212,155,.04);
+      color: #8ed1b3;
+      font-size: 9px;
+      letter-spacing: 1px;
+    }
+
+    .live-indicator .status-dot {
+      width: 6px;
+      height: 6px;
+    }
+
+    .telemetry {
+      position: absolute;
+      top: 76px;
+      right: 18px;
+      z-index: 10;
+      width: min(250px, calc(100% - 36px));
+      display: grid;
+      gap: 8px;
+    }
+
+    .telemetry-card {
+      padding: 11px 12px;
+      border: 1px solid rgba(118,145,170,.12);
+      border-radius: 14px;
+      background: rgba(7,10,14,.58);
+      backdrop-filter: blur(10px);
+    }
+
+    .telemetry-label {
+      color: #677482;
+      font-size: 8px;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+    }
+
+    .telemetry-value {
+      margin-top: 3px;
+      color: #dce9f3;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .telemetry-value small {
+      color: #7e909f;
+      font-size: 9px;
+      font-weight: 700;
+    }
+
+    .telemetry-status {
+      color: #7ca5c3;
+      font-size: 9px;
+    }
+
+    .helicopter-stage {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .flight-axis {
+      position: absolute;
+      width: min(520px, 68vw);
+      height: min(520px, 68vw);
+      border-radius: 50%;
+      border: 1px solid rgba(118,199,255,.07);
+    }
+
+    .flight-axis::before,
+    .flight-axis::after {
+      content: "";
+      position: absolute;
+      inset: 12%;
+      border-radius: 50%;
+      border: 1px dashed rgba(118,199,255,.08);
+    }
+
+    .flight-axis::after {
+      inset: 30%;
+    }
+
+    .helicopter {
+      --rot-speed-scale: 1;
+      position: relative;
+      width: min(460px, 66vw);
+      height: min(460px, 66vw);
+      display: grid;
+      place-items: center;
+    }
+
+    .main-rotor {
+      position: absolute;
+      width: 92%;
+      height: 92%;
+      border-radius: 50%;
+      animation: rotor-spin var(--rotation-duration) linear infinite;
+      animation-play-state: paused;
+      z-index: 2;
+      transition: filter .4s ease;
+    }
+
+    .rotor-hub {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 24px;
+      height: 24px;
+      transform: translate(-50%, -50%);
+      z-index: 6;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #d9e5ed, #667583 45%, #202a34 46%, #0a0f15);
+      border: 1px solid rgba(255,255,255,.17);
+      box-shadow: 0 0 18px rgba(118,199,255,.12);
+    }
+
+    .rotor-cross {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 100%;
+      height: 1px;
+      transform: translate(-50%, -50%);
+      background: rgba(118,199,255,.1);
+    }
+
+    .rotor-cross.v {
+      transform: translate(-50%, -50%) rotate(90deg);
+    }
+
+    .blade {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 47%;
+      height: 18px;
+      transform-origin: 0 50%;
+      border-radius: 18px 5px 5px 18px;
+      border: 1px solid rgba(255,255,255,.08);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.16), transparent 40%),
+        linear-gradient(90deg, var(--blade-highlight), var(--blade-color) 25%, var(--blade-color));
+      box-shadow:
+        inset 0 0 14px rgba(255,255,255,.05),
+        0 0 16px rgba(0,0,0,.15);
+    }
+
+    .blade::after {
+      content: "";
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      width: 26%;
+      height: 2px;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,.15);
+      border-radius: 999px;
+    }
+
+    .blade.b1 { transform: translateY(-50%) rotate(0deg); }
+    .blade.b2 { transform: translateY(-50%) rotate(90deg); }
+    .blade.b3 { transform: translateY(-50%) rotate(180deg); }
+    .blade.b4 { transform: translateY(-50%) rotate(270deg); }
+
+    .fuselage {
+      position: absolute;
+      width: 118px;
+      height: 178px;
+      z-index: 5;
+      border-radius: 56% 56% 34% 34% / 42% 42% 58% 58%;
+      transform: translateY(5px);
+      background:
+        radial-gradient(circle at 48% 18%, rgba(255,255,255,.16), transparent 16%),
+        linear-gradient(165deg, #27313a, #0e141b 58%, #0a0f15);
+      border: 1px solid rgba(255,255,255,.09);
+      box-shadow:
+        inset 0 0 30px rgba(255,255,255,.025),
+        0 20px 45px rgba(0,0,0,.35);
+    }
+
+    .cockpit {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      width: 70px;
+      height: 48px;
+      transform: translateX(-50%);
+      border-radius: 50% 50% 44% 44%;
+      background:
+        linear-gradient(135deg, rgba(174,225,255,.36), rgba(58,108,137,.1)),
+        rgba(13,30,43,.8);
+      border: 1px solid rgba(137,204,242,.22);
+      box-shadow: inset 0 0 16px rgba(95,194,255,.07);
+    }
+
+    .cockpit::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 4px;
+      width: 1px;
+      height: 40px;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,.12);
+    }
+
+    .tail-boom {
+      position: absolute;
+      z-index: 4;
+      left: 50%;
+      bottom: -62px;
+      width: 22px;
+      height: 90px;
+      transform: translateX(-50%) rotate(-2deg);
+      border-radius: 14px;
+      background: linear-gradient(90deg, #141b22, #303d49, #11171e);
+      border: 1px solid rgba(255,255,255,.05);
+    }
+
+    .tail-rotor {
+      position: absolute;
+      z-index: 5;
+      bottom: -90px;
+      left: 50%;
+      width: 74px;
+      height: 74px;
+      transform: translateX(-50%);
+      animation: tail-spin calc(var(--rotation-duration) * 1.35) linear infinite;
+      animation-play-state: paused;
+    }
+
+    .tail-rotor .tail-blade {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 40px;
+      height: 6px;
+      transform-origin: 0 50%;
+      border-radius: 6px;
+      background: var(--blade-color);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .tail-rotor .t1 { transform: translate(0,-50%) rotate(0deg); }
+    .tail-rotor .t2 { transform: translate(0,-50%) rotate(120deg); }
+    .tail-rotor .t3 { transform: translate(0,-50%) rotate(240deg); }
+
+    .navigation-light,
+    .strobe-light {
+      position: absolute;
+      z-index: 7;
+      border-radius: 50%;
+      transition:
+        opacity .25s ease,
+        box-shadow .25s ease,
+        transform .25s ease;
+      opacity: 0;
+    }
+
+    .navigation-light {
+      width: 9px;
+      height: 9px;
+      top: 50%;
+      right: -6px;
+      background: #70c8ff;
+    }
+
+    .strobe-light {
+      width: 8px;
+      height: 8px;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #f0f7ff;
+    }
+
+    .helicopter.nav-on .navigation-light {
+      opacity: 1;
+      box-shadow: 0 0 8px rgba(112,200,255,.7), 0 0 18px rgba(112,200,255,.42);
+    }
+
+    .helicopter.strobe-on .strobe-light {
+      opacity: 1;
+      box-shadow: 0 0 9px rgba(240,247,255,.8), 0 0 24px rgba(240,247,255,.46);
+      animation: strobe .92s steps(2, jump-none) infinite;
+    }
+
+    @keyframes rotor-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes tail-spin {
+      to { transform: translateX(-50%) rotate(360deg); }
+    }
+
+    @keyframes strobe {
+      0%, 34% { opacity: 0; }
+      35%, 45% { opacity: 1; }
+      46%, 100% { opacity: 0; }
+    }
+
+    .simulation-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 8;
+      pointer-events: none;
+      background: radial-gradient(circle, transparent 32%, rgba(0,0,0,.12) 70%, rgba(0,0,0,.35));
+    }
+
+    .sim-footer {
+      position: absolute;
+      bottom: 18px;
+      right: 18px;
+      left: 18px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .sim-caption {
+      color: #71808c;
+      font-size: 9px;
+      line-height: 1.8;
+    }
+
+    .sim-caption strong {
+      color: #a8b6c2;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 120;
+      min-width: min(330px, calc(100vw - 40px));
+      max-width: 380px;
+      padding: 12px 14px;
+      border: 1px solid rgba(118,199,255,.15);
+      border-radius: 14px;
+      background: rgba(9,13,18,.94);
+      backdrop-filter: blur(14px);
+      color: #b9c8d4;
+      box-shadow: 0 18px 45px rgba(0,0,0,.35);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: .25s ease;
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .toast.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .toast.success {
+      border-color: rgba(89,212,155,.2);
+    }
+
+    .toast.error {
+      border-color: rgba(255,77,90,.24);
+    }
+
+    .flash-danger {
+      animation: danger-flash 1s ease 1;
+    }
+
+    @keyframes danger-flash {
+      0%, 100% { box-shadow: var(--shadow); }
+      30% { box-shadow: 0 0 0 1px rgba(255,77,90,.22), 0 0 40px rgba(255,77,90,.13), var(--shadow); }
+    }
+
+    @media (max-width: 940px) {
+      .hero-grid,
+      .spec-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-visual {
+        min-height: 360px;
+      }
+
+      .control-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .control-card.wide {
+        grid-column: span 1;
+      }
+
+      .telemetry {
+        width: 180px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .top-bar {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        padding: 9px 10px;
+      }
+
+      .brand-sub {
+        display: none;
+      }
+
+      .status-pill {
+        padding: 7px 9px;
+        font-size: 9px;
+      }
+
+      .view {
+        padding: 95px 12px 25px;
+      }
+
+      .hero {
+        min-height: calc(100vh - 120px);
+      }
+
+      .hero h1 {
+        font-size: clamp(34px, 11vw, 52px);
+      }
+
+      .hero-description {
+        font-size: 13px;
+        line-height: 1.95;
+      }
+
+      .panel,
+      .control-card {
+        padding: 15px;
+      }
+
+      .consent-panel {
+        align-items: stretch;
+      }
+
+      .consent-panel .btn {
+        width: 100%;
+      }
+
+      .chamber {
+        min-height: calc(100vh - 120px);
+        border-radius: 20px;
+      }
+
+      .telemetry {
+        top: 72px;
+        right: 12px;
+        width: 160px;
+      }
+
+      .telemetry-value {
+        font-size: 16px;
+      }
+
+      .flight-axis {
+        width: 92vw;
+        height: 92vw;
+      }
+
+      .helicopter {
+        width: 94vw;
+        height: 94vw;
+      }
+
+      .sim-footer {
+        right: 12px;
+        left: 12px;
+        bottom: 12px;
+      }
+
+      .sim-footer .btn {
+        width: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-mark">AR</div>
+        <div class="brand-copy">
+          <div class="brand-name">نظام المحاكاة الهوائية المتقدم</div>
+          <div class="brand-sub">Advanced Rotor Simulation System</div>
+        </div>
+      </div>
+
+      <div class="status-pill" id="globalStatus">
+        <span class="status-dot"></span>
+        <span>النظام في وضع الاستعداد</span>
+      </div>
+    </header>
+
+    <!-- القسم الأول -->
+    <section id="landing" class="view active">
+      <div class="container hero">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <div class="eyebrow">ARSS // VIRTUAL TEST ENVIRONMENT</div>
+
+            <h1>
+              نظام المحاكاة
+              <span>الهوائية المتقدم</span>
+            </h1>
+
+            <p class="hero-description">
+              مرحباً بك في بيئة المحاكاة الافتراضية. تم بناء هذا النظام لتوفير تجربة بصرية دقيقة تحاكي الديناميكا الهوائية وحركة الشفرات الدوارة في الوقت الفعلي. نهدف من خلال هذه الواجهة إلى تقديم نموذج اختباري يدمج بين دقة الإعدادات الفيزيائية وجمالية التصميم التفاعلي، مما يتيح للمستخدم التحكم الكامل في متغيرات الطاقة والسرعة ضمن بيئة معزولة وآمنة.
+            </p>
+
+            <div class="developer-line">
+              المطور: <strong>أيمن رعد</strong>
+            </div>
+
+            <div class="hero-actions">
+              <button class="btn btn-primary nav-btn" data-target="specs">
+                الدخول إلى واجهة المحاكاة
+              </button>
+            </div>
+          </div>
+
+          <div class="hero-visual">
+            <div class="scan-line"></div>
+
+            <div class="status-card">
+              <span>SIM CORE <strong>VIRTUAL</strong></span>
+              <span>REV. <strong>ARSS-01</strong></span>
+            </div>
+
+            <div class="schematic">
+              <div class="schematic-ring"></div>
+              <div class="schematic-line l1"></div>
+              <div class="schematic-line l2"></div>
+              <div class="schematic-line l3"></div>
+              <div class="schematic-line l4"></div>
+              <div class="schematic-core"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- القسم الثاني -->
+    <section id="specs" class="view">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-kicker">01 // TECHNICAL SPECIFICATIONS</div>
+          <h2 class="section-title">المواصفات الفنية</h2>
+          <p class="section-subtitle">
+            راجع نطاق التشغيل الافتراضي وإرشادات الاختبار قبل فتح لوحة التحكم.
+          </p>
+        </div>
+
+        <div class="spec-grid">
+          <article class="panel">
+            <div class="panel-title">
+              <h3>متطلبات الطاقة</h3>
+              <span class="panel-index">POWER / 12—48V</span>
+            </div>
+
+            <p class="energy-note">
+              يعمل النظام الافتراضي على محرك تيار مستمر (Brushless DC). لضمان استقرار الدوران وتجنب أي تذبذب في الأداء، يجب ضبط الفولتية بين 12V كحد أدنى للتشغيل، و48V كحد أقصى للوصول إلى العزم الكامل.
+            </p>
+
+            <div class="range-box">
+              <div class="range-line">
+                <span>الحد الأدنى</span>
+                <strong>12V</strong>
+              </div>
+              <div class="range-line" style="margin-top:9px;">
+                <span>الحد الأعلى</span>
+                <strong>48V</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-title">
+              <h3>إرشادات الشركة المصنعة</h3>
+              <span class="panel-index">SAFETY</span>
+            </div>
+
+            <ul class="spec-list">
+              <li>يُنصح بالبدء بسرعة منخفضة ثم التدرج لتجنب الإجهاد المفاجئ على هيكل المروحية.</li>
+              <li>تأكد من توافق إعدادات الإضاءة مع بيئة الاختبار لضمان وضوح رؤية مسار الشفرات.</li>
+              <li>في حال حدوث عدم استقرار في الدوران الافتراضي، يرجى تفعيل نظام التوقف الطارئ فوراً.</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="panel consent-panel">
+          <label class="consent-label">
+            <input type="checkbox" id="riskConsent" />
+            <span>
+              أقر وأعترف بالمخاطر وقد قرأتها سابقاً، وأفهم أن هذه البيئة محاكاة بصرية وليست نموذجاً تشغيلياً حقيقياً.
+            </span>
+          </label>
+
+          <button class="btn btn-primary nav-btn" id="toControl" data-target="control" disabled>
+            الانتقال إلى لوحة التحكم
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- القسم الثالث -->
+    <section id="control" class="view">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-kicker">02 // CONTROL SYSTEM</div>
+          <h2 class="section-title">لوحة التحكم</h2>
+          <p class="section-subtitle">
+            اضبط المعلمات ثم أرسلها إلى غرفة المحاكاة الافتراضية.
+          </p>
+        </div>
+
+        <div class="control-grid">
+          <article class="control-card">
+            <div class="control-heading">
+              <div>
+                <h3>وحدة ضبط الطاقة</h3>
+                <p>تحديد جهد التشغيل الافتراضي ضمن النطاق المسموح.</p>
+              </div>
+              <div class="digital-readout"><span id="voltageValue">24</span>V</div>
+            </div>
+
+            <div class="range-wrap">
+              <input id="voltageSlider" type="range" min="12" max="48" value="24" step="1" />
+              <div class="range-scale">
+                <span>12V</span>
+                <span>24V</span>
+                <span>36V</span>
+                <span>48V</span>
+              </div>
+            </div>
+
+            <div class="preview-bar">
+              <div class="preview-chip">الحالة: <strong id="powerState">متوسطة</strong></div>
+              <div class="preview-chip">العزم: <strong id="torqueState">52%</strong></div>
+            </div>
+          </article>
+
+          <article class="control-card">
+            <div class="control-heading">
+              <div>
+                <h3>محدد سرعة الدوران</h3>
+                <p>اختيار نمط التشغيل الذي يحدد سلوك الدوران.</p>
+              </div>
+            </div>
+
+            <div class="select-wrap">
+              <select id="speedMode">
+                <option value="idle" data-rpm="0" data-factor="0">وضع السكون</option>
+                <option value="test" data-rpm="850" data-factor="0.32">دوران اختباري</option>
+                <option value="flight" data-rpm="1750" data-factor="0.67">سرعة الطيران المنتظم</option>
+                <option value="max" data-rpm="2750" data-factor="1">أقصى عزم دوران</option>
+              </select>
+            </div>
+
+            <div class="preview-bar">
+              <div class="preview-chip">RPM المستهدف: <strong id="targetRpm">0</strong></div>
+              <div class="preview-chip">معامل السرعة: <strong id="speedFactor">0%</strong></div>
+            </div>
+          </article>
+
+          <article class="control-card">
+            <div class="control-heading">
+              <div>
+                <h3>تخصيص الشفرات</h3>
+                <p>المادة تغير المظهر البصري للشفرة في غرفة الاختبار.</p>
+              </div>
+            </div>
+
+            <div class="select-wrap">
+              <select id="bladeMaterial">
+                <option value="carbon">ألياف الكربون (أسود مطفي)</option>
+                <option value="aluminum">سبائك الألمنيوم (فضي معدني)</option>
+              </select>
+            </div>
+
+            <div class="preview-bar">
+              <div class="preview-chip">المادة: <strong id="materialState">كربون</strong></div>
+              <div class="preview-chip">الانعكاس: <strong id="reflectionState">منخفض</strong></div>
+            </div>
+          </article>
+
+          <article class="control-card">
+            <div class="control-heading">
+              <div>
+                <h3>أنظمة الإضاءة</h3>
+                <p>تفعيل مؤثرات الإضاءة داخل البيئة الافتراضية.</p>
+              </div>
+            </div>
+
+            <div class="toggle-list">
+              <div class="toggle-item">
+                <div class="toggle-copy">
+                  <strong>إضاءة الملاحة</strong>
+                  <span>إشارة ضوئية جانبية ثابتة</span>
+                </div>
+
+                <label class="toggle" aria-label="إضاءة الملاحة">
+                  <input type="checkbox" id="navigationToggle" />
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+
+              <div class="toggle-item">
+                <div class="toggle-copy">
+                  <strong>إضاءة التتبع الوامضة (Strobe)</strong>
+                  <span>وميض دوري أثناء التشغيل</span>
+                </div>
+
+                <label class="toggle" aria-label="إضاءة التتبع الوامضة">
+                  <input type="checkbox" id="strobeToggle" />
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+            </div>
+          </article>
+
+          <article class="control-card wide">
+            <div class="control-heading">
+              <div>
+                <h3>مراجعة الإعدادات قبل التشغيل</h3>
+                <p>يتم نقل كل القيم مباشرة إلى غرفة العزل عند بدء التشغيل.</p>
+              </div>
+            </div>
+
+            <div class="preview-bar" style="margin-top:20px;">
+              <div class="preview-chip">الجهد: <strong id="summaryVoltage">24V</strong></div>
+              <div class="preview-chip">الدوران: <strong id="summarySpeed">وضع السكون</strong></div>
+              <div class="preview-chip">الشفرات: <strong id="summaryMaterial">ألياف الكربون</strong></div>
+              <div class="preview-chip">الملاحة: <strong id="summaryNav">متوقفة</strong></div>
+              <div class="preview-chip">Strobe: <strong id="summaryStrobe">متوقف</strong></div>
+            </div>
+
+            <div class="control-footer">
+              <div class="validation-note">
+                حالة التحقق: <strong id="validationState">جاهز للتشغيل الافتراضي</strong>
+              </div>
+
+              <button class="btn btn-primary" id="startSimulation">
+                بدء تشغيل المحرك
+              </button>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- القسم الرابع -->
+    <section id="simulation" class="view">
+      <div class="container">
+        <div class="chamber" id="chamber">
+          <div class="chamber-grid"></div>
+
+          <div class="chamber-header">
+            <div class="chamber-title">
+              <h2>غرفة العزل والمحاكاة</h2>
+              <span>VIRTUAL ROTOR TEST CHAMBER // LIVE TELEMETRY</span>
+            </div>
+
+            <div class="live-indicator" id="liveIndicator">
+              <span class="status-dot"></span>
+              <span id="liveText">SIMULATION ACTIVE</span>
+            </div>
+          </div>
+
+          <div class="telemetry">
+            <div class="telemetry-card">
+              <div class="telemetry-label">Current RPM</div>
+              <div class="telemetry-value">
+                <span id="rpmReadout">0000</span>
+                <small>RPM</small>
+              </div>
+            </div>
+
+            <div class="telemetry-card">
+              <div class="telemetry-label">Engine Temp</div>
+              <div class="telemetry-value">
+                <span id="tempReadout">24.0</span>
+                <small>°C</small>
+              </div>
+            </div>
+
+            <div class="telemetry-card">
+              <div class="telemetry-label">System Mode</div>
+              <div class="telemetry-status" id="modeReadout">STANDBY</div>
+            </div>
+          </div>
+
+          <div class="helicopter-stage">
+            <div class="flight-axis"></div>
+
+            <div class="helicopter" id="helicopter">
+              <div class="main-rotor" id="mainRotor">
+                <div class="rotor-cross"></div>
+                <div class="rotor-cross v"></div>
+
+                <div class="blade b1"></div>
+                <div class="blade b2"></div>
+                <div class="blade b3"></div>
+                <div class="blade b4"></div>
+
+                <div class="rotor-hub"></div>
+              </div>
+
+              <div class="fuselage">
+                <div class="cockpit"></div>
+                <div class="navigation-light"></div>
+                <div class="strobe-light"></div>
+              </div>
+
+              <div class="tail-boom"></div>
+
+              <div class="tail-rotor" id="tailRotor">
+                <div class="tail-blade t1"></div>
+                <div class="tail-blade t2"></div>
+                <div class="tail-blade t3"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="simulation-overlay"></div>
+
+          <div class="sim-footer">
+            <div class="sim-caption" id="simCaption">
+              <strong>ARSS</strong> — محاكاة بصرية معزولة. لا تمثل خصائص طيران فعلية أو نظام قيادة حقيقياً.
+            </div>
+
+            <button class="btn btn-danger" id="emergencyStop">
+              إيقاف الطوارئ
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const state = {
+        currentView: "landing",
+        running: false,
+        emergencyStopping: false,
+        voltage: 24,
+        speedMode: "idle",
+        speedFactor: 0,
+        targetRpm: 0,
+        material: "carbon",
+        navigation: false,
+        strobe: false,
+        visualRpm: 0,
+        temperature: 24
+      };
+
+      const views = [...document.querySelectorAll(".view")];
+      const navButtons = [...document.querySelectorAll(".nav-btn")];
+
+      const riskConsent = document.getElementById("riskConsent");
+      const toControl = document.getElementById("toControl");
+
+      const voltageSlider = document.getElementById("voltageSlider");
+      const voltageValue = document.getElementById("voltageValue");
+
+      const speedMode = document.getElementById("speedMode");
+      const targetRpm = document.getElementById("targetRpm");
+      const speedFactor = document.getElementById("speedFactor");
+
+      const bladeMaterial = document.getElementById("bladeMaterial");
+      const navigationToggle = document.getElementById("navigationToggle");
+      const strobeToggle = document.getElementById("strobeToggle");
+
+      const helicopter = document.getElementById("helicopter");
+      const mainRotor = document.getElementById("mainRotor");
+      const tailRotor = document.getElementById("tailRotor");
+
+      const rpmReadout = document.getElementById("rpmReadout");
+      const tempReadout = document.getElementById("tempReadout");
+      const modeReadout = document.getElementById("modeReadout");
+
+      const summaryVoltage = document.getElementById("summaryVoltage");
+      const summarySpeed = document.getElementById("summarySpeed");
+      const summaryMaterial = document.getElementById("summaryMaterial");
+      const summaryNav = document.getElementById("summaryNav");
+      const summaryStrobe = document.getElementById("summaryStrobe");
+
+      const powerState = document.getElementById("powerState");
+      const torqueState = document.getElementById("torqueState");
+      const materialState = document.getElementById("materialState");
+      const reflectionState = document.getElementById("reflectionState");
+
+      const validationState = document.getElementById("validationState");
+      const globalStatus = document.getElementById("globalStatus");
+      const liveText = document.getElementById("liveText");
+      const chamber = document.getElementById("chamber");
+      const toast = document.getElementById("toast");
+
+      let telemetryTimer = null;
+      let stopTimer = null;
+      let toastTimer = null;
+
+      const SPEED_LABELS = {
+        idle: "وضع السكون",
+        test: "دوران اختباري",
+        flight: "سرعة الطيران المنتظم",
+        max: "أقصى عزم دوران"
+      };
+
+      function showView(targetId) {
+        if (state.emergencyStopping && targetId === "control") return;
+
+        views.forEach(view => {
+          view.classList.toggle("active", view.id === targetId);
+        });
+
+        state.currentView = targetId;
+
+        if (targetId === "simulation") {
+          window.requestAnimationFrame(() => {
+            chamber.scrollIntoView({ behavior: "smooth", block: "center" });
+          });
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        updateGlobalStatus();
+      }
+
+      function showToast(message, type = "") {
+        toast.textContent = message;
+        toast.className = "toast show " + type;
+
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toast.className = "toast";
+        }, 3200);
+      }
+
+      function updateGlobalStatus() {
+        const label = globalStatus.querySelector("span:last-child");
+
+        if (state.running) {
+          label.textContent = "المحاكاة قيد التشغيل";
+        } else if (state.emergencyStopping) {
+          label.textContent = "تنفيذ التوقف الطارئ";
+        } else if (state.currentView === "simulation") {
+          label.textContent = "النظام في وضع الخمول";
+        } else {
+          label.textContent = "النظام في وضع الاستعداد";
+        }
+      }
+
+      function updateVoltage() {
+        state.voltage = Number(voltageSlider.value);
+        voltageValue.textContent = state.voltage;
+        summaryVoltage.textContent = `${state.voltage}V`;
+
+        const powerRatio = (state.voltage - 12) / 36;
+        const torque = Math.round(powerRatio * 100);
+
+        torqueState.textContent = `${torque}%`;
+
+        if (state.voltage <= 18) {
+          powerState.textContent = "منخفضة";
+        } else if (state.voltage <= 32) {
+          powerState.textContent = "متوسطة";
+        } else if (state.voltage <= 42) {
+          powerState.textContent = "مرتفعة";
+        } else {
+          powerState.textContent = "قصوى";
+        }
+
+        updateSimulationParameters();
+      }
+
+      function updateSpeed() {
+        const selected = speedMode.options[speedMode.selectedIndex];
+        state.speedMode = speedMode.value;
+        state.targetRpm = Number(selected.dataset.rpm || 0);
+        state.speedFactor = Number(selected.dataset.factor || 0);
+
+        targetRpm.textContent = state.targetRpm.toLocaleString("en-US");
+        speedFactor.textContent = `${Math.round(state.speedFactor * 100)}%`;
+        summarySpeed.textContent = selected.textContent.trim();
+
+        updateSimulationParameters();
+      }
+
+      function updateMaterial() {
+        state.material = bladeMaterial.value;
+
+        if (state.material === "carbon") {
+          document.documentElement.style.setProperty("--blade-color", "#171b20");
+          document.documentElement.style.setProperty("--blade-highlight", "#4b5661");
+          materialState.textContent = "كربون";
+          reflectionState.textContent = "منخفض";
+        } else {
+          document.documentElement.style.setProperty("--blade-color", "#8c969f");
+          document.documentElement.style.setProperty("--blade-highlight", "#d7dde2");
+          materialState.textContent = "ألمنيوم";
+          reflectionState.textContent = "مرتفع";
+        }
+
+        summaryMaterial.textContent =
+          state.material === "carbon"
+            ? "ألياف الكربون"
+            : "سبائك الألمنيوم";
+      }
+
+      function updateLights() {
+        state.navigation = navigationToggle.checked;
+        state.strobe = strobeToggle.checked;
+
+        helicopter.classList.toggle("nav-on", state.navigation);
+        helicopter.classList.toggle("strobe-on", state.strobe);
+
+        summaryNav.textContent = state.navigation ? "مفعلة" : "متوقفة";
+        summaryStrobe.textContent = state.strobe ? "مفعل" : "متوقف";
+      }
+
+      function updateSimulationParameters() {
+        /*
+          مدة الدورة مبنية على عاملين:
+          - الجهد: كلما ارتفع، تقل مدة الدورة.
+          - نمط السرعة: يحدد القوة الأساسية للدوران.
+
+          هذا نموذج بصري فقط وليس نموذجاً فيزيائياً لمروحية حقيقية.
+        */
+        const voltageFactor = 0.35 + ((state.voltage - 12) / 36) * 0.65;
+        const effectiveFactor = state.speedFactor * voltageFactor;
+
+        // من 0.12s إلى 1.25s تقريباً ضمن نطاق المحاكاة.
+        const duration = effectiveFactor <= 0
+          ? 1.25
+          : Math.max(0.12, 1.18 - effectiveFactor * 1.06);
+
+        document.documentElement.style.setProperty(
+          "--rotation-duration",
+          `${duration.toFixed(3)}s`
+        );
+      }
+
+      function startRotors() {
+        state.running = true;
+        state.emergencyStopping = false;
+
+        updateSimulationParameters();
+
+        const hasRotation = state.targetRpm > 0 && state.speedFactor > 0;
+
+        mainRotor.style.animationPlayState = hasRotation ? "running" : "paused";
+        tailRotor.style.animationPlayState = hasRotation ? "running" : "paused";
+
+        liveText.textContent = hasRotation ? "SIMULATION ACTIVE" : "STANDBY MODE";
+        modeReadout.textContent = hasRotation
+          ? SPEED_LABELS[state.speedMode].toUpperCase()
+          : "STANDBY";
+
+        validationState.textContent = hasRotation
+          ? "المعلمات مقبولة — المحاكاة تعمل"
+          : "تم التشغيل في وضع السكون";
+
+        updateGlobalStatus();
+      }
+
+      function beginSimulation() {
+        updateVoltage();
+        updateSpeed();
+        updateMaterial();
+        updateLights();
+
+        if (!riskConsent.checked) {
+          showToast("يجب تحديد الموافقة قبل فتح لوحة التحكم.", "error");
+          showView("specs");
+          return;
+        }
+
+        startRotors();
+        showView("simulation");
+        showToast("تم تحميل الإعدادات وبدء المحاكاة الافتراضية.", "success");
+        startTelemetry();
+      }
+
+      function stopRotorsEmergency() {
+        if (state.emergencyStopping) return;
+
+        state.emergencyStopping = true;
+        state.running = false;
+
+        chamber.classList.add("flash-danger");
+        liveText.textContent = "EMERGENCY STOP";
+        modeReadout.textContent = "EMERGENCY";
+        validationState.textContent = "تم تفعيل التوقف الطارئ";
+
+        updateGlobalStatus();
+        showToast("تم تفعيل التوقف الطارئ. يجري خفض سرعة الدوران تدريجياً.", "error");
+
+        const computedDuration = parseFloat(
+          getComputedStyle(document.documentElement)
+            .getPropertyValue("--rotation-duration")
+        ) || 1;
+
+        mainRotor.style.animationPlayState = "running";
+        tailRotor.style.animationPlayState = "running";
+
+        let start = performance.now();
+        const stopDuration = Math.max(700, Math.min(1800, computedDuration * 1000 * 2.3));
+
+        clearInterval(stopTimer);
+
+        stopTimer = setInterval(() => {
+          const progress = Math.min(1, (performance.now() - start) / stopDuration);
+          const currentDuration = computedDuration * (1 + progress * 12);
+
+          document.documentElement.style.setProperty(
+            "--rotation-duration",
+            `${currentDuration.toFixed(3)}s`
+          );
+
+          if (progress >= 1) {
+            clearInterval(stopTimer);
+
+            mainRotor.style.animationPlayState = "paused";
+            tailRotor.style.animationPlayState = "paused";
+
+            state.visualRpm = 0;
+            rpmReadout.textContent = "0000";
+            tempReadout.textContent = "24.0";
+
+            state.emergencyStopping = false;
+            chamber.classList.remove("flash-danger");
+
+            updateGlobalStatus();
+
+            setTimeout(() => {
+              validationState.textContent = "النظام متوقف بأمان";
+              showView("control");
+              showToast("اكتمل التوقف الطارئ، ويمكن تعديل الإعدادات.", "success");
+            }, 260);
+          }
+        }, 30);
+      }
+
+      function startTelemetry() {
+        clearInterval(telemetryTimer);
+
+        state.visualRpm = 0;
+        state.temperature = 24;
+
+        telemetryTimer = setInterval(() => {
+          if (!state.running) return;
+
+          const voltageInfluence = (state.voltage - 12) / 36;
+          const baseRpm = state.targetRpm * (0.78 + voltageInfluence * 0.22);
+
+          const randomDrift = (Math.random() - 0.5) * 95;
+          const approach = (baseRpm - state.visualRpm) * 0.14;
+
+          state.visualRpm = Math.max(
+            0,
+            Math.round(state.visualRpm + approach + randomDrift)
+          );
+
+          const tempBase = 24 + state.targetRpm / 100 + state.voltage * 0.22;
+          const tempDrift = (Math.random() - 0.5) * 0.9;
+
+          state.temperature = Math.max(
+            24,
+            Math.min(88, Number((tempBase + tempDrift).toFixed(1)))
+          );
+
+          rpmReadout.textContent =
+            Math.max(0, state.visualRpm).toString().padStart(4, "0");
+
+          tempReadout.textContent = state.temperature.toFixed(1);
+        }, 280);
+      }
+
+      function resetToControlDefaults() {
+        state.running = false;
+        state.emergencyStopping = false;
+        mainRotor.style.animationPlayState = "paused";
+        tailRotor.style.animationPlayState = "paused";
+        modeReadout.textContent = "STANDBY";
+        liveText.textContent = "SIMULATION STANDBY";
+        updateGlobalStatus();
+      }
+
+      riskConsent.addEventListener("change", () => {
+        toControl.disabled = !riskConsent.checked;
+      });
+
+      voltageSlider.addEventListener("input", updateVoltage);
+      speedMode.addEventListener("change", updateSpeed);
+      bladeMaterial.addEventListener("change", updateMaterial);
+
+      navigationToggle.addEventListener("change", updateLights);
+      strobeToggle.addEventListener("change", updateLights);
+
+      navButtons.forEach(button => {
+        button.addEventListener("click", () => {
+          const target = button.dataset.target;
+
+          if (target === "control" && !riskConsent.checked) {
+            showToast("حدد مربع الموافقة أولاً لفتح لوحة التحكم.", "error");
+            return;
+          }
+
+          showView(target);
+        });
+      });
+
+      document.getElementById("startSimulation").addEventListener("click", beginSimulation);
+      document.getElementById("emergencyStop").addEventListener("click", stopRotorsEmergency);
+
+      window.addEventListener("keydown", event => {
+        if (event.key === "Escape" && state.currentView === "simulation") {
+          stopRotorsEmergency();
+        }
+      });
+
+      // التهيئة الأولية
+      updateVoltage();
+      updateSpeed();
+      updateMaterial();
+      updateLights();
+      resetToControlDefaults();
+
+      // حالة افتراضية مريحة لبدء تجربة المحاكاة.
+      speedMode.value = "test";
+      updateSpeed();
+    })();
+  </script>
+</body>
+</html>
